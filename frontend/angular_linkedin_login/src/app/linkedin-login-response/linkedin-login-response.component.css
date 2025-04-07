@@ -1,0 +1,25 @@
+/* src/app/linkedin-login-response/linkedin-login-response.component.css */
+.auth-container {
+  max-width: 500px;
+  margin: 50px auto;
+  text-align: center;
+}
+
+.loading {
+  font-size: 1.2rem;
+  color: #333;
+}
+
+.error {
+  color: #d32f2f;
+  font-size: 1.1rem;
+}
+
+.error a {
+  color: #0077b5;
+  text-decoration: none;
+}
+
+.error a:hover {
+  text-decoration: underline;
+}

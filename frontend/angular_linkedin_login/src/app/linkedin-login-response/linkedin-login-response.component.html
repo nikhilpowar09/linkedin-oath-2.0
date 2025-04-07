@@ -1,0 +1,12 @@
+<!-- src/app/linkedin-login-response/linkedin-login-response.component.html -->
+<div class="auth-container">
+  <div *ngIf="isLoading" class="loading">
+    <p>Authenticating with LinkedIn...</p>
+  </div>
+  <div *ngIf="errorMessage" class="error">
+    <p>{{ errorMessage }}</p>
+    <a routerLink="/login">Try again</a>
+  </div>
+</div>
+
+

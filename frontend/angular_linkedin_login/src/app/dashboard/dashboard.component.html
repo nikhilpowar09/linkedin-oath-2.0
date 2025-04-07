@@ -1,0 +1,44 @@
+<!-- src/app/dashboard/dashboard.component.html -->
+<div class="dashboard-container">
+  <header>
+    <h2>LinkedIn Dashboard</h2>
+    <button (click)="logout()">Logout</button>
+  </header>
+
+  <div class="post-scheduler">
+    <h3>Schedule New Post</h3>
+    <textarea [(ngModel)]="newPost.content" placeholder="Write your post content..."></textarea>
+    <input type="datetime-local" [(ngModel)]="newPost.scheduledTime">
+    <button (click)="schedulePost()">Schedule Post</button>
+  </div>
+
+  <div class="user-posts">
+    <h3>Your Posts</h3>
+    <div *ngFor="let post of userPosts" class="post-card">
+      <p>{{ post.specificContent?.shareCommentary?.text }}</p>
+      <small>Posted on: {{ post.createdAt | date:'medium' }}</small>
+      <button (click)="getPostAnalytics(post.id)">View Analytics</button>
+    </div>
+  </div>
+
+  <div *ngIf="postAnalytics" class="post-analytics">
+    <h3>Post Analytics</h3>
+    <p>Likes: {{ postAnalytics.likes?.total || 0 }}</p>
+    <p>Comments: {{ postAnalytics.comments?.total || 0 }}</p>
+
+    <div class="interaction-section">
+      <button (click)="interactWithPost('like')">Like</button>
+      <div>
+        <input [(ngModel)]="newComment" placeholder="Add a comment...">
+        <button (click)="interactWithPost('comment')">Comment</button>
+      </div>
+    </div>
+
+    <div *ngIf="postAnalytics.comments?.elements" class="comments-section">
+      <h4>Comments</h4>
+      <div *ngFor="let comment of postAnalytics.comments.elements" class="comment">
+        <p>{{ comment.message?.text }}</p>
+      </div>
+    </div>
+  </div>
+</div>
