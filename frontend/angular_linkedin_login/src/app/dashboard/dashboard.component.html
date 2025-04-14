@@ -1,44 +1,160 @@
-<!-- src/app/dashboard/dashboard.component.html -->
 <div class="dashboard-container">
   <header>
-    <h2>LinkedIn Dashboard</h2>
-    <button (click)="logout()">Logout</button>
+    <div class="profile-header">
+      <img [src]="user?.profilePicture || 'assets/default-profile.png'" alt="Profile" class="profile-pic">
+      <div>
+        <h2>Welcome, {{user?.name || 'User'}}!</h2>
+        <button (click)="logout()" class="logout-btn">Logout</button>
+      </div>
+    </div>
   </header>
 
-  <div class="post-scheduler">
+  <div *ngIf="isLoading" class="loading-spinner">
+    <div class="spinner"></div>
+  </div>
+
+  <section class="post-form-section">
     <h3>Schedule New Post</h3>
-    <textarea [(ngModel)]="newPost.content" placeholder="Write your post content..."></textarea>
-    <input type="datetime-local" [(ngModel)]="newPost.scheduledTime">
-    <button (click)="schedulePost()">Schedule Post</button>
-  </div>
+    <div class="post-form">
+      <textarea [(ngModel)]="postContent" placeholder="Write your post here..." class="post-textarea"></textarea>
 
-  <div class="user-posts">
-    <h3>Your Posts</h3>
-    <div *ngFor="let post of userPosts" class="post-card">
-      <p>{{ post.specificContent?.shareCommentary?.text }}</p>
-      <small>Posted on: {{ post.createdAt | date:'medium' }}</small>
-      <button (click)="getPostAnalytics(post.id)">View Analytics</button>
+      <div class="image-upload-container">
+        <label class="image-upload-label">
+          <input type="file" accept="image/*" (change)="onFileSelected($event)" class="file-input">
+          Upload Image
+        </label>
+        <div *ngIf="previewImage" class="image-preview">
+          <img [src]="previewImage" alt="Preview">
+          <button (click)="previewImage = null; selectedFile = null" class="remove-image-btn">×</button>
+        </div>
+      </div>
+
+      <div class="schedule-controls">
+        <input type="datetime-local"
+               [(ngModel)]="scheduledTime"
+               [min]="getCurrentDateTimeForInput()"
+               class="datetime-input">
+        <button (click)="schedulePost()"
+                [disabled]="!postContent.trim() || !scheduledTime"
+                class="schedule-btn">
+          Schedule Post
+        </button>
+      </div>
+      <p *ngIf="error" class="error-message">{{error}}</p>
+      <p class="timezone-info">
+        Your local timezone: {{getLocalTimezone()}} ({{getTimezoneOffset()}})
+      </p>
     </div>
-  </div>
+  </section>
 
-  <div *ngIf="postAnalytics" class="post-analytics">
-    <h3>Post Analytics</h3>
-    <p>Likes: {{ postAnalytics.likes?.total || 0 }}</p>
-    <p>Comments: {{ postAnalytics.comments?.total || 0 }}</p>
+  <section class="posts-section">
+    <div class="section-header">
+      <h3>Scheduled Posts</h3>
+      <span class="post-count">{{scheduledPosts.length}} scheduled</span>
+    </div>
 
-    <div class="interaction-section">
-      <button (click)="interactWithPost('like')">Like</button>
-      <div>
-        <input [(ngModel)]="newComment" placeholder="Add a comment...">
-        <button (click)="interactWithPost('comment')">Comment</button>
+    <div *ngIf="scheduledPosts.length === 0" class="empty-state">
+      No scheduled posts
+    </div>
+
+    <div *ngFor="let post of scheduledPosts" class="post-card scheduled">
+      <div class="post-header">
+        <img [src]="post.user.profilePicture || 'assets/default-profile.png'" class="user-avatar">
+        <div class="user-info">
+          <span class="username">{{post.user.name}}</span>
+          <span class="post-time">
+            {{formatLocalDate(post.scheduledTime)}}
+            <span class="time-status">{{getTimeStatus(post.scheduledTime)}}</span>
+          </span>
+        </div>
+        <button (click)="deletePost(post._id)" class="delete-btn">Delete</button>
+      </div>
+
+      <p class="post-content">{{post.content}}</p>
+
+      <img *ngIf="post.imageUrl"
+           [src]="environment.backendUrl + post.imageUrl"
+           class="post-image">
+
+      <div class="post-actions">
+        <button (click)="likePost(post._id)" class="like-btn" [class.liked]="isPostLiked(post)">
+          ❤️ {{post.likes.length}} {{post.likes.length === 1 ? 'Like' : 'Likes'}}
+        </button>
+      </div>
+
+      <div class="comments-section">
+        <div *ngFor="let comment of post.comments" class="comment">
+          <img [src]="comment.user.profilePicture || 'assets/default-profile.png'" class="comment-avatar">
+          <div class="comment-content">
+            <span class="comment-author">{{comment.user.name}}</span>
+            <p class="comment-text">{{comment.text}}</p>
+            <span class="comment-time">{{formatLocalDate(comment.createdAt)}}</span>
+          </div>
+        </div>
+
+        <div class="add-comment">
+          <input [(ngModel)]="commentTexts[post._id]"
+                 placeholder="Write a comment..."
+                 class="comment-input"
+                 (keyup.enter)="addComment(post._id)">
+          <button (click)="addComment(post._id)" class="comment-btn">Post</button>
+        </div>
       </div>
     </div>
+  </section>
 
-    <div *ngIf="postAnalytics.comments?.elements" class="comments-section">
-      <h4>Comments</h4>
-      <div *ngFor="let comment of postAnalytics.comments.elements" class="comment">
-        <p>{{ comment.message?.text }}</p>
+  <section class="posts-section">
+    <div class="section-header">
+      <h3>Published Posts</h3>
+      <span class="post-count">{{publishedPosts.length}} published</span>
+    </div>
+
+    <div *ngIf="publishedPosts.length === 0" class="empty-state">
+      No published posts yet
+    </div>
+
+    <div *ngFor="let post of publishedPosts" class="post-card published">
+      <div class="post-header">
+        <img [src]="post.user.profilePicture || 'assets/default-profile.png'" class="user-avatar">
+        <div class="user-info">
+          <span class="username">{{post.user.name}}</span>
+          <span class="post-time">
+            {{formatLocalDate(post.scheduledTime)}}
+          </span>
+        </div>
+        <span class="status-badge published">published</span>
+      </div>
+
+      <p class="post-content">{{post.content}}</p>
+
+      <img *ngIf="post.imageUrl"
+           [src]="environment.backendUrl + post.imageUrl"
+           class="post-image">
+
+      <div class="post-actions">
+        <button (click)="likePost(post._id)" class="like-btn" [class.liked]="isPostLiked(post)">
+          ❤️ {{post.likes.length}} {{post.likes.length === 1 ? 'Like' : 'Likes'}}
+        </button>
+      </div>
+
+      <div class="comments-section">
+        <div *ngFor="let comment of post.comments" class="comment">
+          <img [src]="comment.user.profilePicture || 'assets/default-profile.png'" class="comment-avatar">
+          <div class="comment-content">
+            <span class="comment-author">{{comment.user.name}}</span>
+            <p class="comment-text">{{comment.text}}</p>
+            <span class="comment-time">{{formatLocalDate(comment.createdAt)}}</span>
+          </div>
+        </div>
+
+        <div class="add-comment">
+          <input [(ngModel)]="commentTexts[post._id]"
+                 placeholder="Write a comment..."
+                 class="comment-input"
+                 (keyup.enter)="addComment(post._id)">
+          <button (click)="addComment(post._id)" class="comment-btn">Post</button>
+        </div>
       </div>
     </div>
-  </div>
+  </section>
 </div>

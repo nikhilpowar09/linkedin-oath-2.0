@@ -1,13 +1,29 @@
 // src/app/app.routes.ts
 import { Routes } from '@angular/router';
-import { LoginComponent } from './login/login.component';
-import { LinkedinLoginResponseComponent } from './linkedin-login-response/linkedin-login-response.component';
-import { DashboardComponent } from './dashboard/dashboard.component';
+import {  AuthGuard } from './guards/auth.guard';
 
 export const routes: Routes = [
-  { path: '', redirectTo: '/login', pathMatch: 'full' },
-  { path: 'login', component: LoginComponent },
-  { path: 'linkedInLogin', component: LinkedinLoginResponseComponent },
-  { path: 'dashboard', component: DashboardComponent },
-  { path: '**', redirectTo: '/login' }
+  {
+    path: 'login',
+    loadComponent: () => import('./login/login.component').then(m => m.LoginComponent)
+  },
+  {
+    path: 'linkedInLogin',
+    loadComponent: () => import('./linkedin-login-response/linkedin-login-response.component')
+      .then(m => m.LinkedinLoginResponseComponent)
+  },
+  {
+    path: 'dashboard',
+    loadComponent: () => import('./dashboard/dashboard.component').then(m => m.DashboardComponent),
+    canActivate: [AuthGuard]
+  },
+  {
+    path: '',
+    redirectTo: 'dashboard',
+    pathMatch: 'full'
+  },
+  {
+    path: '**',
+    redirectTo: 'dashboard'
+  }
 ];

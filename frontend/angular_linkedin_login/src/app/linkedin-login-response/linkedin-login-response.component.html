@@ -1,12 +1,13 @@
-<!-- src/app/linkedin-login-response/linkedin-login-response.component.html -->
+<!-- linkedin-login-response.component.html -->
 <div class="auth-container">
-  <div *ngIf="isLoading" class="loading">
-    <p>Authenticating with LinkedIn...</p>
+  <div *ngIf="isLoading" class="loading-state">
+    <div class="spinner"></div>
+    <p>Completing LinkedIn authentication...</p>
   </div>
-  <div *ngIf="errorMessage" class="error">
-    <p>{{ errorMessage }}</p>
-    <a routerLink="/login">Try again</a>
+
+  <div *ngIf="error" class="error-state">
+    <h3>Authentication Error</h3>
+    <p>{{error}}</p>
+    <button class="retry-btn" (click)="retry()">Try Again</button>
   </div>
 </div>
-
-
