@@ -1,0 +1,1 @@
+"use strict";(self.webpackChunkangular_linkedin_login=self.webpackChunkangular_linkedin_login||[]).push([[76],{5312:(i,e,n)=>{n.d(e,{c:()=>l});const l={production:!1,backendUrl:"http://localhost:5000",linkedin:{clientId:"86p3ct3bn385w6",redirectUrl:"http://localhost:4200/linkedInLogin",scopes:"openid profile email w_member_social"}}}}]);
